@@ -1,0 +1,4 @@
+*.exe
+dist/
+# old versions kept locally only
+_archive/
