@@ -57,6 +57,19 @@ func hints(onBar bool, keys [][2]string) string {
 	return ds.Render(" ") + strings.Join(parts, ss.Render(" · ")) + ds.Render(" ")
 }
 
+// hintsFit renders keys like hints, dropping entries from the end of keys
+// (lowest priority last) until the line fits in w. The entries in always are
+// kept whenever they fit, so narrow terminals still show "? help" and quit.
+func hintsFit(w int, keys, always [][2]string) string {
+	for n := len(keys); n >= 0; n-- {
+		s := hints(false, append(append([][2]string{}, keys[:n]...), always...))
+		if ansi.StringWidth(s) <= w {
+			return s
+		}
+	}
+	return hints(false, always)
+}
+
 // renderList draws a column of entries: a selection marker, a type glyph,
 // the name in its type color and (optionally) a right-aligned size.
 func renderList(entries []entry, cursor, offset, w, h int, focused, showSize bool) []string {
@@ -308,14 +321,14 @@ func (m *model) footer(w int) string {
 	case modeOpenWith:
 		return fit(hints(false, [][2]string{{"j/k", "select"}, {"enter/1-9", "open"}, {"esc", "cancel"}}), w)
 	case modeBookmarks:
-		return fit(hints(false, [][2]string{{"enter/1-9", "jump"}, {"t", "in new tab"}, {"a", "add this folder"},
-			{"r", "rename"}, {"d", "remove"}, {"J/K", "reorder"}, {"esc", "close"}}), w)
+		return fit(hintsFit(w, [][2]string{{"enter/1-9", "jump"}, {"t", "in new tab"}, {"a", "add this folder"},
+			{"r", "rename"}, {"d", "remove"}, {"J/K", "reorder"}}, [][2]string{{"esc", "close"}}), w)
 	}
-	return fit(hints(false, [][2]string{
-		{"f", "find"}, {"u", "undo"}, {"o", "explorer"}, {"n", "new md"}, {"N", "mkdir"}, {"e", "edit"}, {"E", "open with"},
-		{"b", "bookmarks"}, {"S", "sort"}, {"c", "claude"}, {"t", "tab"}, {"/", "filter"},
-		{"?", "help"}, {"q q", "quit"},
-	}), w)
+	// Ordered by how often they're needed; the tail is dropped on narrow terminals.
+	return fit(hintsFit(w, [][2]string{
+		{"f", "find"}, {"u", "undo"}, {"n", "new md"}, {"N", "mkdir"}, {"e", "edit"}, {"c", "claude"},
+		{"o", "explorer"}, {"E", "open with"}, {"b", "bookmarks"}, {"S", "sort"}, {"t", "tab"}, {"/", "filter"},
+	}, [][2]string{{"?", "help"}, {"q q", "quit"}}), w)
 }
 
 func (m *model) openWithLines(w, h int) []string {

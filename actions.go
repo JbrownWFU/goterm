@@ -32,10 +32,40 @@ func launchOpener(o Opener, path string) error {
 func openTerminalTab(dir string, command []string) error {
 	wt, err := exec.LookPath("wt")
 	if err != nil {
-		return errors.New("Windows Terminal (wt.exe) not found on PATH")
+		return errors.New("Windows Terminal (wt.exe) not found · install it from the Microsoft Store, or run goterm inside it")
+	}
+	if missing := missingProgram(command); missing != "" {
+		return fmt.Errorf("%s is not on PATH · install it, or change the command in config.json", missing)
 	}
 	args := append([]string{"-w", "0", "nt", "-d", dir}, command...)
 	return startDetached(wt, args, dir)
+}
+
+// missingProgram checks the programs a tab command would run and returns the
+// first one that isn't installed, or "". It looks at the first word, and when
+// that is a shell with -Command/-c, at the first word of the command too
+// (e.g. "claude" in `powershell -NoExit -Command claude`).
+func missingProgram(command []string) string {
+	if len(command) == 0 {
+		return ""
+	}
+	check := []string{command[0]}
+	for i, a := range command {
+		if (strings.EqualFold(a, "-Command") || a == "-c") && i+1 < len(command) {
+			inner := command[i+1]
+			// Only simple "prog args" commands; skip pipelines, builtins and script snippets.
+			if first := strings.Fields(inner); len(first) > 0 && !strings.ContainsAny(inner, ";|&$(){}") {
+				check = append(check, first[0])
+			}
+			break
+		}
+	}
+	for _, c := range check {
+		if _, err := exec.LookPath(c); err != nil {
+			return c
+		}
+	}
+	return ""
 }
 
 func openInExplorer(dir string) error {

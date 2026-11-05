@@ -1,4 +1,4 @@
-module goterm
+module github.com/JbrownWFU/goterm
 
 go 1.25.1
 

@@ -71,9 +71,9 @@ func configPath() string {
 }
 
 // loadConfig reads the user's config, writing the defaults on first run so
-// there's a file to edit.
-func loadConfig() Config {
-	cfg := defaultConfig()
+// there's a file to edit. firstRun reports that the file was just created.
+func loadConfig() (cfg Config, firstRun bool) {
+	cfg = defaultConfig()
 	path := configPath()
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -81,9 +81,10 @@ func loadConfig() Config {
 			if b, err := json.MarshalIndent(cfg, "", "  "); err == nil {
 				_ = os.MkdirAll(filepath.Dir(path), 0o755)
 				_ = os.WriteFile(path, b, 0o644)
+				firstRun = true
 			}
 		}
-		return cfg
+		return cfg, firstRun
 	}
 	_ = json.Unmarshal(data, &cfg)
 	if !cfg.Sort.valid() {
@@ -92,7 +93,7 @@ func loadConfig() Config {
 	if cfg.GlamourStyle == "" {
 		cfg.GlamourStyle = "tokyo-night"
 	}
-	return cfg
+	return cfg, false
 }
 
 func saveBookmarks(path string, bms []Bookmark) error {

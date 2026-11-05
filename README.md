@@ -23,15 +23,15 @@ undo-from-Recycle-Bin and Explorer are Windows-only.
 your `PATH` (e.g. `%USERPROFILE%\bin`), and run `goterm`. Windows SmartScreen
 may warn because the exe isn't signed; "More info → Run anyway".
 
-**Or build it** (Go 1.25+):
+**Or install with Go** (Go 1.25+):
 
 ```powershell
-git clone <repo url>
-cd goterm
-go install .
+go install github.com/JbrownWFU/goterm@latest
 ```
 
-That puts `goterm.exe` in `%USERPROFILE%\go\bin`.
+That puts `goterm.exe` in `%USERPROFILE%\go\bin` (make sure that folder is on
+your `PATH`). To build from a clone instead: `git clone https://github.com/JbrownWFU/goterm`,
+`cd goterm`, `go install .`. Check what you have with `goterm --version`.
 
 **Optional:** to have `q q` leave your shell in the folder you browsed to, add
 the `gt` function from [gt.ps1](gt.ps1) to your PowerShell profile
